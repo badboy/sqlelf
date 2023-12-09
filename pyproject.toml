@@ -26,6 +26,7 @@ dependencies = [
     "lief >=0.13.2",
     "apsw >= 3.43.1.0",
     "sh >= 2.0.6",
+    "oelf >= 0.0.2"
 ]
 
 [project.urls]

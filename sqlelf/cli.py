@@ -7,6 +7,7 @@ from functools import reduce
 from typing import TextIO
 
 from sqlelf import elf
+from sqlelf import macho
 from sqlelf import sql as api_sql
 
 
@@ -85,7 +86,7 @@ def start(args: list[str] = sys.argv[1:], stdin: TextIO = sys.stdin) -> None:
 
     # If none of the inputs are valid files, simply return
     if len(filenames) == 0:
-        sys.exit("No valid ELF files were provided")
+        sys.exit("No valid ELF/MACH-O files were provided")
 
     sql_engine = api_sql.make_sql_engine(
         filenames, recursive=program_args.recursive, cache_flags=program_args.cache_flag

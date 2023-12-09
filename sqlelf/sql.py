@@ -8,9 +8,11 @@ from typing import Any, Dict, Iterator, Optional, TextIO
 import apsw
 import apsw.shell
 import lief
+import oelf
 import sh  # type: ignore
 
 from sqlelf import elf
+from sqlelf import macho
 
 
 @dataclass
@@ -98,9 +100,18 @@ def make_sql_engine(
                 libraries needed by each binary
         cache_flags: bit flag that controls which tables to cache
     """
-    binaries: list[lief.Binary] = [
-        lief.parse(filename) for filename in filenames if lief.is_elf(filename)
-    ]
+    binaries: list[lief.Binary] = []
+    machos: list[oelf.Object] = []
+
+    for filename in filenames:
+        if lief.is_elf(filename):
+            binaries.append(lief.parse(filename))
+        else:
+            try:
+                machos.append(oelf.Object(filename))
+            except TypeError:
+                pass
+
     connection = apsw.Connection(":memory:")
 
     if recursive:
@@ -120,4 +131,6 @@ def make_sql_engine(
         binaries = binaries + [lief.parse(library) for library in shared_libraries_set]
 
     elf.register_virtual_tables(connection, binaries, cache_flags)
+    if machos:
+        macho.register_virtual_tables(connection, machos)
     return SQLEngine(connection)
