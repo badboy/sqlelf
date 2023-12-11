@@ -194,6 +194,7 @@ def register_sections(
             for sect in obj.sections():
                 yield {
                     "path": obj.path,
+                    "index": sect.index,
                     "name": sect.name,
                     "segment": sect.segment,
                     "addr": sect.addr,
@@ -208,6 +209,7 @@ def register_sections(
     generator = Generator.make_generator(
         [
             "path",
+            "index",
             "name",
             "segment",
             "addr",
