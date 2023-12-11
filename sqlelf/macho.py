@@ -40,6 +40,7 @@ class CacheFlag(Flag):
     INSTRUCTIONS = auto()
     SECTIONS = auto()
     SEGMENTS = auto()
+    LOAD_COMMANDS = auto()
     EXPORTS = auto()
     IMPORTS = auto()
     SYMBOLS = auto()
@@ -411,6 +412,28 @@ def register_libs(
     )
 
 
+def register_load_commands(
+    machos: list[oelf.Object], connection: apsw.Connection, cache_flags: CacheFlag
+) -> None:
+    def dynamic_entries_generator() -> Iterator[dict[str, Any]]:
+        for obj in machos:
+            for lcmd in obj.load_commands():
+                yield {"path": obj.path, "offset": lcmd.offset, "command": lcmd.command}
+
+    generator = Generator.make_generator(
+        ["path", "offset", "command"],
+        dynamic_entries_generator,
+    )
+
+    register_generator(
+        connection,
+        generator,
+        "macho_load_commands",
+        CacheFlag.LOAD_COMMANDS,
+        cache_flags,
+    )
+
+
 def register_virtual_tables(
     connection: apsw.Connection,
     machos: list[oelf.Object],
@@ -434,6 +457,7 @@ def register_virtual_tables(
         register_imports,
         register_rpaths,
         register_libs,
+        register_load_commands,
     ]
     for register_function in register_table_functions:
         register_function(machos, connection, CacheFlag.ALL())
