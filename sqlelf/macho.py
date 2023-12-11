@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from enum import Flag, auto
 from typing import Any, Callable, Iterator, Sequence
 
+
 @dataclass
 class Generator:
     """A generator for the virtual table SQLite module.
@@ -151,10 +152,28 @@ def register_symbols(
                     "weak": sym.weak,
                     "undefined": sym.undefined,
                     "stab": sym.stab,
+                    "n_strx": sym.meta.n_strx,
+                    "n_type": sym.meta.n_type,
+                    "n_sect": sym.meta.n_sect,
+                    "n_desc": sym.meta.n_desc,
+                    "n_value": sym.meta.n_value,
                 }
 
     generator = Generator.make_generator(
-        ["path", "name", "type", "global", "weak", "undefined", "stab"],
+        [
+            "path",
+            "name",
+            "type",
+            "global",
+            "weak",
+            "undefined",
+            "stab",
+            "n_strx",
+            "n_type",
+            "n_sect",
+            "n_desc",
+            "n_value",
+        ],
         dynamic_entries_generator,
     )
 
@@ -356,13 +375,13 @@ def register_virtual_tables(
         binaries: the list of binaries to analyze
         flags: the bitwise flags which controls which virtual table to enable"""
     register_table_functions = [
-            register_headers,
-            register_symbols,
-            register_sections,
-            register_exports,
-            register_imports,
-            register_rpaths,
-            register_libs,
+        register_headers,
+        register_symbols,
+        register_sections,
+        register_exports,
+        register_imports,
+        register_rpaths,
+        register_libs,
     ]
     for register_function in register_table_functions:
-        register_function(machos, connection, cache_flags)
+        register_function(machos, connection, CacheFlag.ALL())
