@@ -39,6 +39,7 @@ class CacheFlag(Flag):
     HEADERS = auto()
     INSTRUCTIONS = auto()
     SECTIONS = auto()
+    SEGMENTS = auto()
     EXPORTS = auto()
     IMPORTS = auto()
     SYMBOLS = auto()
@@ -182,6 +183,54 @@ def register_symbols(
         generator,
         "macho_symbols",
         CacheFlag.SYMBOLS,
+        cache_flags,
+    )
+
+
+def register_segments(
+    machos: list[oelf.Object], connection: apsw.Connection, cache_flags: CacheFlag
+) -> None:
+    def dynamic_entries_generator() -> Iterator[dict[str, Any]]:
+        for obj in machos:
+            for segm in obj.segments():
+                yield {
+                    "path": obj.path,
+                    "cmd": segm.cmd,
+                    "cmdsize": segm.cmdsize,
+                    "name": segm.name,
+                    "vmaddr": segm.vmaddr,
+                    "vmsize": segm.vmsize,
+                    "fileoff": segm.fileoff,
+                    "filesize": segm.filesize,
+                    "maxprot": segm.maxprot,
+                    "initprot": segm.initprot,
+                    "nsects": segm.nsects,
+                    "flags": segm.flags,
+                }
+
+    generator = Generator.make_generator(
+        [
+            "path",
+            "cmd",
+            "cmdsize",
+            "name",
+            "vmaddr",
+            "vmsize",
+            "fileoff",
+            "filesize",
+            "maxprot",
+            "initprot",
+            "nsects",
+            "flags",
+        ],
+        dynamic_entries_generator,
+    )
+
+    register_generator(
+        connection,
+        generator,
+        "macho_segments",
+        CacheFlag.SEGMENTS,
         cache_flags,
     )
 
@@ -379,6 +428,7 @@ def register_virtual_tables(
     register_table_functions = [
         register_headers,
         register_symbols,
+        register_segments,
         register_sections,
         register_exports,
         register_imports,
